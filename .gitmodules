@@ -1,228 +1,24 @@
-[submodule "cores/libretro-fba-lite"]
-	path = cores/libretro-fba-lite
-	url = https://gitee.com/yizhigai/libretro-fba-lite
-[submodule "cores/gpsp"]
-	path = cores/gpsp
-	url = https://github.com/libretro/gpsp
-    branch = master
-[submodule "cores/libretro-fceumm"]
-	path = cores/libretro-fceumm
-	url = https://github.com/libretro/libretro-fceumm
-    branch = master
-[submodule "cores/gambatte-libretro"]
-	path = cores/gambatte-libretro
-	url = https://github.com/libretro/gambatte-libretro
-    branch = master
-[submodule "cores/beetle-ngp-libretro"]
-	path = cores/beetle-ngp-libretro
-	url = https://github.com/libretro/beetle-ngp-libretro
-    branch = master
-[submodule "cores/beetle-pce-fast-libretro"]
-	path = cores/beetle-pce-fast-libretro
-	url = https://github.com/libretro/beetle-pce-fast-libretro
-    branch = master
-[submodule "cores/Genesis-Plus-GX"]
-	path = cores/Genesis-Plus-GX
-	url = https://github.com/libretro/Genesis-Plus-GX
-    branch = master
-[submodule "cores/beetle-supergrafx-libretro"]
-	path = cores/beetle-supergrafx-libretro
-	url = https://github.com/libretro/beetle-supergrafx-libretro
-    branch = master
-[submodule "cores/beetle-wswan-libretro"]
-	path = cores/beetle-wswan-libretro
-	url = https://github.com/libretro/beetle-wswan-libretro
-    branch = master
-[submodule "cores/nestopia"]
-	path = cores/nestopia
-	url = https://github.com/libretro/nestopia
-    branch = master
-[submodule "cores/pcsx_rearmed"]
-	path = cores/pcsx_rearmed
-	url = https://github.com/libretro/pcsx_rearmed
-    branch = master
-[submodule "cores/picodrive"]
-	path = cores/picodrive
-	url = https://github.com/libretro/picodrive
-    branch = master
-[submodule "cores/snes9x2002"]
-	path = cores/snes9x2002
-	url = https://github.com/libretro/snes9x2002
-[submodule "cores/snes9x2005"]
-	path = cores/snes9x2005
-	url = https://github.com/libretro/snes9x2005
-    branch = master
-[submodule "cores/vba-next"]
-	path = cores/vba-next
-	url = https://github.com/libretro/vba-next
-    branch = master
-[submodule "deps/libretro-common"]
-	path = deps/libretro-common
-	url = https://github.com/libretro/libretro-common
-    branch = master
-[submodule "deps/simpleini"]
-	path = deps/simpleini
-	url = https://github.com/brofield/simpleini
-    branch = master
-[submodule "deps/7-Zip"]
-	path = deps/7-Zip
-	url = https://github.com/mcmilk/7-Zip.git
-    branch = master
-[submodule "cores/libretro-fbneo"]
-	path = cores/libretro-fbneo
-	url = https://github.com/libretro/FBNeo.git
-    branch = master
-[submodule "cores/fbalpha2012"]
-	path = cores/fbalpha2012
-	url = https://github.com/libretro/fbalpha2012.git
-    branch = master
-[submodule "cores/mgba"]
-	path = cores/mgba
-	url = https://github.com/libretro/mgba.git
-    branch = master
-[submodule "cores/Genesis-Plus-GX-Wide"]
-	path = cores/Genesis-Plus-GX-Wide
-	url = https://github.com/libretro/Genesis-Plus-GX-Wide.git
-    branch = main
-[submodule "cores/stella2014-libretro"]
-	path = cores/stella2014-libretro
-	url = https://github.com/libretro/stella2014-libretro
-    branch = master
-[submodule "cores/prosystem-libretro"]
-	path = cores/prosystem-libretro
-	url = https://github.com/libretro/prosystem-libretro
-    branch = master
-[submodule "cores/libretro-atari800"]
-	path = cores/libretro-atari800
-	url = https://github.com/libretro/libretro-atari800
-    branch = master
-[submodule "cores/dosbox-svn"]
-	path = cores/dosbox-svn
-	url = https://github.com/libretro/dosbox-svn
-	branch = libretro
-[submodule "cores/dosbox-pure"]
-	path = cores/dosbox-pure
-	url = https://github.com/schellingb/dosbox-pure
-    branch = main
-[submodule "cores/mame2003-plus-libretro"]
-	path = cores/mame2003-plus-libretro
-	url = https://github.com/libretro/mame2003-plus-libretro.git
-    branch = master
-[submodule "cores/mame2000-libretro"]
-	path = cores/mame2000-libretro
-	url = https://github.com/libretro/mame2000-libretro.git
-    branch = master
-[submodule "cores/mame2003-libretro"]
-	path = cores/mame2003-libretro
-	url = https://github.com/libretro/mame2003-libretro.git
-    branch = master
 [submodule "deps/lz4"]
 	path = deps/lz4
 	url = https://github.com/lz4/lz4.git
-    branch = release
-[submodule "cores/libretro-vecx"]
-	path = cores/libretro-vecx
-	url = https://github.com/libretro/libretro-vecx.git
-	branch = master
-[submodule "cores/uae4arm-libretro"]
-	path = cores/uae4arm-libretro
-	url = https://github.com/noword/uae4arm-libretro.git
-	branch = master
-[submodule "cores/fuse-libretro"]
-	path = cores/fuse-libretro
-	url = https://github.com/libretro/fuse-libretro.git
-	branch = master
-[submodule "cores/neocd_libretro"]
-	path = cores/neocd_libretro
-	url = https://github.com/libretro/neocd_libretro.git
-	branch = master
-[submodule "cores/hatari"]
-	path = cores/hatari
-	url = https://github.com/libretro/hatari.git
-	branch = master
-[submodule "cores/mame2003-xtreme"]
-	path = cores/mame2003-xtreme
-	url = https://github.com/KMFDManic/mame2003-xtreme.git
-	branch = master
-[submodule "cores/FBNeo-Xtreme-Amped"]
-	path = cores/FBNeo-Xtreme-Amped
-	url = https://github.com/KMFDManic/FBNeo-Xtreme-Amped.git
-	branch = master
-[submodule "cores/supafaust"]
-	path = cores/supafaust
-	url = https://github.com/Rinnegatamante/supafaust.git
-	branch = master
-[submodule "cores/chimerasnes"]
-	path = cores/chimerasnes
-	url = https://github.com/jamsilva/chimerasnes.git
-	branch = master
-[submodule "cores/tgbdual-libretro"]
-	path = cores/tgbdual-libretro
-	url = https://github.com/libretro/tgbdual-libretro.git
-	branch = master
-[submodule "cores/libretro-meowPC98"]
-	path = cores/libretro-meowPC98
-	url = https://github.com/libretro/libretro-meowPC98.git
-	branch = master
-[submodule "cores/blueMSX-libretro"]
-	path = cores/blueMSX-libretro
-	url = https://github.com/libretro/blueMSX-libretro.git
-	branch = master
-[submodule "cores/fmsx-libretro"]
-	path = cores/fmsx-libretro
-	url = https://github.com/libretro/fmsx-libretro.git
-	branch = master
-[submodule "cores/vice-libretro"]
-	path = cores/vice-libretro
-	url = https://github.com/libretro/vice-libretro.git
-	branch = master
-[submodule "cores/px68k-libretro"]
-	path = cores/px68k-libretro
-	url = https://github.com/libretro/px68k-libretro.git
-	branch = master
-[submodule "cores/beetle-lynx-libretro"]
-	path = cores/beetle-lynx-libretro
-	url = https://github.com/libretro/beetle-lynx-libretro.git
-	branch = master
-[submodule "cores/libretro-handy"]
-	path = cores/libretro-handy
-	url = https://github.com/libretro/libretro-handy.git
-	branch = master
-[submodule "cores/libretro-cap32"]
-	path = cores/libretro-cap32
-	url = https://github.com/libretro/libretro-cap32.git
-	branch = master
-[submodule "cores/libretro-crocods"]
-	path = cores/libretro-crocods
-	url = https://github.com/libretro/libretro-crocods.git
-	branch = master
-[submodule "deps/rcheevos"]
-	path = deps/rcheevos
-	url = https://github.com/RetroAchievements/rcheevos.git
-	branch = master
-[submodule "cores/snes9x"]
-	path = cores/snes9x
-	url = https://github.com/libretro/snes9x.git
+[submodule "deps/7-Zip"]
+	path = deps/7-Zip
+	url = https://github.com/mcmilk/7-Zip.git
+[submodule "deps/libretro-common"]
+	path = deps/libretro-common
+	url = https://github.com/libretro/libretro-common
 [submodule "deps/minizip-ng"]
 	path = deps/minizip-ng
 	url = https://github.com/zlib-ng/minizip-ng.git
-	branch = develop
-[submodule "cores/NP2kai"]
-	path = cores/NP2kai
-	url = https://github.com/AZO234/NP2kai.git
-	branch = master
-[submodule "cores/quasi88-libretro"]
-	path = cores/quasi88-libretro
-	url = https://github.com/libretro/quasi88-libretro.git
-	branch = master
-[submodule "cores/beetle-vb-libretro"]
-	path = cores/beetle-vb-libretro
-	url = https://github.com/libretro/beetle-vb-libretro.git
-	branch = master
-[submodule "cores/gw-libretro"]
-	path = cores/gw-libretro
-	url = https://github.com/libretro/gw-libretro.git
+[submodule "deps/rcheevos"]
+	path = deps/rcheevos
+	url = https://github.com/RetroAchievements/rcheevos.git
+[submodule "deps/simpleini"]
+	path = deps/simpleini
+	url = https://github.com/brofield/simpleini
 [submodule "deps/zlib-ng"]
 	path = deps/zlib-ng
 	url = https://github.com/zlib-ng/zlib-ng.git
-	branch = stable
+[submodule "cores/gpsp"]
+	path = cores/gpsp
+	url = https://github.com/libretro/gpsp

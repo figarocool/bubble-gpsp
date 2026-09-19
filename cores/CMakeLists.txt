@@ -16,6 +16,7 @@ set(C_FLAG_OPTIMIZATION -marm -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard
 set(CORE_CFLAGS -save-temps)
 
 if(CORE STREQUAL "gpsp")
+    set(CORE_CFLAGS ${CORE_CFLAGS} -g)
 elseif(CORE STREQUAL "vba_next")
     set(CORE_MAKEFILE_NAME ${CMAKE_CURRENT_SOURCE_DIR}/../apps/${CORE}/Makefile.libretro)
 elseif(CORE STREQUAL "gambatte")

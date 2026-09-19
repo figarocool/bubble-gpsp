@@ -1,299 +1,81 @@
-[For English](README.en.md)
+> **Nota:** [Emu4VitaPlus](https://github.com/noword/Emu4VitaPlus) (il progetto originale) è un frontend libretro che compila decine di core diversi (NES, SNES, Genesis, arcade, ecc). Questo fork compila **solo il core gpSP** (Game Boy Advance, con dynarec ARM reale via [libretro/gpsp](https://github.com/libretro/gpsp)) — la vpk risultante è solo l'emulatore GBA con la funzione "Crea bolla", non l'intera suite Emu4VitaPlus.
 
-# Emu4Vita++
-这是一个在 PlayStation Vita 使用的, 基于 [Libretro API](https://github.com/libretro/libretro-common) 的模拟器前端。
+## gpSP (Emu4VitaPlus) + "Create Vita Bubble"
 
-* [下载](#下载)
-* [功能说明](#功能说明)
-* [支持的内核](#支持的内核)
-* [编译](#编译前准备)
-* [相关脚本](#相关脚本)
-* [相关路径](#相关路径)
-* [问题反馈](#问题反馈)
-* [特别感谢](#特别感谢)
+Questo è il fratello GBA di [pnes-bubble](https://github.com/figarocool/pnes-bubble), [psnes-bubble](https://github.com/figarocool/psnes-bubble) e [bubble-mgba](../bubble-mgba): stessa funzione, "trasforma qualsiasi ROM in una bolla PS Vita indipendente", applicata stavolta a **gpSP** invece che a mGBA.
 
-## 下载
-[Release](https://github.com/noword/Emu4VitaPlus/releases)
+**Perché gpSP e non mGBA per il GBA?** [bubble-mgba](../bubble-mgba) usa mGBA, che su Vita è un puro interprete C (nessun dynarec) e fatica sui giochi GBA più pesanti (es. Pokémon FireRed gira lento). gpSP invece include un vero dynarec ARM→ARM, lo stesso usato da RetroArch su Vita, quindi le prestazioni sono molto migliori sugli stessi giochi.
 
-[百度网盘](https://pan.baidu.com/s/1chcOOw9G1GBtlkM9K4MtRg?pwd=E4VP)
+### Come si usa
+1. Compila (o scarica dalla sezione releases) la vpk e installala
+2. Copia `gba_bios.bin` in `ux0:data/EMU4VITAPLUS/system/gba_bios.bin`
+3. Copia le tue ROM `.gba` in una cartella qualsiasi (es. `ux0:data/roms/gba/`)
+4. Apri l'app, naviga fino alla ROM, selezionala e scegli **"Create Vita bubble"** dal menu
+5. Attendi la creazione (serve WiFi per scaricare la copertina)
+6. La bolla apparirà sulla LiveArea con icona/copertina del gioco e titolo corretto — si avvia direttamente nel gioco, senza passare dalla UI di Emu4VitaPlus
 
-带log的版本会在 `ux0:data/EMU4VITAPLUS/[core]/Emu4Vita++.log` 中输出更多日志，但是会影响执行效率。
+### Cosa fa dietro le quinte
+- Riconosce il nome vero del gioco tramite il **CRC32 della ROM**, e scarica la copertina da [libretro-thumbnails](https://github.com/libretro-thumbnails) ("Nintendo - Game Boy Advance"), convertita in PNG a palette (richiesto da Sony, altrimenti l'installazione fallisce con errore `0x8010113D`)
+- Clona l'intero pacchetto dell'app (eboot, assets, overlay) insieme alla ROM scelta in un nuovo pacchetto App
+- Genera un `param.sfo` con `TITLE_ID`/`TITLE`/**`CONTENT_ID`** univoci per ogni bolla (il `CONTENT_ID` univoco è necessario: senza, la 2ª bolla creata perde l'icona piccola in LiveArea perché la shell la mette in cache per content-id) e il file `sce_sys/package/head.bin` richiesto dal sistema (senza il quale l'installazione fallisce con `0x8010111C`)
+- Si auto-installa come bolla reale tramite `scePromoterUtilityPromotePkgWithRif` — richiede il modulo `SCE_SYSMODULE_INTERNAL_PAF` caricato prima e un eboot compilato con authid elevato (`0x2808000000000000`, lo stesso di SceShell/VitaShell)
+- All'avvio la bolla imposta una flag (`gBubbleMode`) che nasconde completamente boot-log e UI grafica di Emu4VitaPlus finché il gioco non è partito — zero flicker, ma il tasto **PS** resta sempre funzionante per aprire il menu in-game (che si apre di default sul tab **Sistema**, non Stato)
+- La bolla riconosce da sola la ROM inclusa (`app0:bubble/`) e la carica direttamente, senza passare dalla lista giochi
 
-## 功能说明
-### 内核选择
-<img src="screenshots/arch.jpg" width="720"/>
+### Nota tecnica
+Questo repo è una versione ridotta del monorepo Emu4VitaPlus: `cmake/cores.cmake` elenca solo la riga `gpsp` (invece delle ~50 righe originali), il top-level `CMakeLists.txt` compila sempre e solo `BUILD=gpsp` (niente modalità `All`/`Arch`, quindi niente cartella `arch/`), e `deps/`/`cores/` includono solo i submodule realmente usati da gpSP: [`gpsp`](https://github.com/libretro/gpsp), `libretro-common`, `simpleini`, `7-Zip`, `lz4`, `rcheevos`, `minizip-ng`, `zlib-ng` (più `libvita2d`/`libvita2d_ext`, vendorizzati come file normali anche a monte).
 
-|                                                                                                             |                        |
-|-------------------------------------------------------------------------------------------------------------|------------------------|
-| <img src="screenshots/start.svg" width="30">                                                                | 开启/关闭 console 图标 |
-| <img src="screenshots/analog-r-lr.svg" width="30">                                                          | 控制说明文本滚动       |
-| <img src="screenshots/button-circle.svg" width="30"> 或 <img src="screenshots/button-cross.svg" width="30"> | 启动内核               |
+La funzione bolla è implementata in `frontend/source/bubble_maker.cpp/.h` (nuovo file, non presente in Emu4VitaPlus), agganciata alla UI in `frontend/source/ui/tabs/tab_browser.cpp` (voce di menu "Create Vita bubble") e all'avvio in `frontend/source/main.cpp` (`CheckBubbleRom()`) e `frontend/source/ui/ui.cpp` (flag `gBubbleMode`, gestita in `Ui::Show()`/`NotifyBootResult()`).
 
-### ROM 浏览
-<img src="screenshots/browser.jpg" width="720"/>
+`gba_bios.bin` **non** è incluso nel repo (per motivi di copyright, come da BIOS reali) — va copiato manualmente sulla console.
 
-|                                                                                                             |                                |
-|-------------------------------------------------------------------------------------------------------------|--------------------------------|
-| <img src="screenshots/start.svg" width="30">                                                                | 添加/移出收藏夹                |
-| <img src="screenshots/select.svg" width="30">                                                               | 呼出文件管理菜单               |
-| <img src="screenshots/button-circle.svg" width="30"> 或 <img src="screenshots/button-cross.svg" width="30"> | 进入目录/返回上层目录/启动游戏 |
-| <img src="screenshots/button-triangle.svg" width="30">                                                      | 搜索                           |
-| <img src="screenshots/button-square.svg" width="30">                                                        | 下一个搜索匹配文件             |
+---
 
-### 手柄测试
+## gpSP (Emu4VitaPlus) + "Create Vita Bubble"
 
-<img src="screenshots/control_test.jpg" width="720">
+> **Scope:** [Emu4VitaPlus](https://github.com/noword/Emu4VitaPlus) (the upstream project) is a libretro-based frontend that builds dozens of different cores (NES, SNES, Genesis, arcade, etc). This fork only builds the **gpSP core** (Game Boy Advance, with a real ARM dynarec via [libretro/gpsp](https://github.com/libretro/gpsp)) — the resulting vpk is just the GBA emulator with the new bubble feature, not the full Emu4VitaPlus suite.
 
-### 主题
-<img src="screenshots/theme.jpg" width="720">
+This is the GBA sibling of [pnes-bubble](https://github.com/figarocool/pnes-bubble), [psnes-bubble](https://github.com/figarocool/psnes-bubble) and [bubble-mgba](../bubble-mgba): same "turn any rom into a standalone PS Vita bubble" feature, this time built on **gpSP** instead of mGBA.
 
-### 游戏
-<img src="screenshots/game.jpg" width="720"/>
+**Why gpSP instead of mGBA for GBA?** [bubble-mgba](../bubble-mgba) uses mGBA, which on Vita is a pure C interpreter (no dynarec) and struggles on heavier GBA titles (e.g. Pokémon FireRed runs slow). gpSP ships a real ARM→ARM dynarec — the same one RetroArch uses on Vita — so performance on the same games is much better.
 
-|                                                                                                        |            |
-|--------------------------------------------------------------------------------------------------------|------------|
-| <img src="screenshots/playstation.svg" width="30"> + <img src="screenshots/analog-r-l.svg" width="30"> | 回溯       |
-| <img src="screenshots/playstation.svg" width="30"> + <img src="screenshots/R.svg" width="30">          | 加速       |
-| <img src="screenshots/playstation.svg" width="30"> + <img src="screenshots/L.svg" width="30">          | 减速       |
-| <img src="screenshots/playstation.svg" width="30">                                                     | 切换回菜单 |
+### How to use it
+1. Build (or grab from releases) the vpk and install it
+2. Copy `gba_bios.bin` to `ux0:data/EMU4VITAPLUS/system/gba_bios.bin`
+3. Copy your `.gba` roms anywhere (e.g. `ux0:data/roms/gba/`)
+4. Open the app, browse to the rom, select it and choose **"Create Vita bubble"** from the menu
+5. Wait for it to build (needs WiFi to download the cover art)
+6. The bubble appears on the LiveArea with the game's icon/art and correct title — launches straight into the game, skipping the Emu4VitaPlus UI entirely
 
-### PC OS 模拟器中，例如 DOS, PC98 等，呼出键盘
+### What happens under the hood
+- Resolves the game's real title from the rom's **CRC32**, and downloads cover art from [libretro-thumbnails](https://github.com/libretro-thumbnails) ("Nintendo - Game Boy Advance"), converted to indexed-palette PNGs (Sony's validator rejects plain truecolor PNGs with error `0x8010113D`)
+- Clones the app's whole package (eboot, assets, overlays) alongside the chosen rom into a new app package
+- Generates a `param.sfo` with a unique `TITLE_ID`/`TITLE`/**`CONTENT_ID`** per bubble (the unique `CONTENT_ID` matters: without it, the 2nd bubble created loses its small LiveArea icon because the shell caches grid icons by content-id) and the `sce_sys/package/head.bin` the system requires (missing it fails with `0x8010111C`)
+- Self-installs as a real bubble via `scePromoterUtilityPromotePkgWithRif`, which needs the `SCE_SYSMODULE_INTERNAL_PAF` module loaded first and an eboot built with an elevated authid (`0x2808000000000000`, the same one SceShell/VitaShell uses)
+- On boot the bubble sets a flag (`gBubbleMode`) that fully hides Emu4VitaPlus's boot log and UI chrome until the game has started — zero flicker, but the **PS button** still works to open the in-game menu (which opens on the **System** tab by default, not State)
+- The bubble detects its bundled rom (`app0:bubble/`) on its own and loads it directly, never touching the rom list
 
-<img src="screenshots/keyboard.jpg" width="720"/>
+### Technical note
+This repo is a trimmed-down copy of the Emu4VitaPlus monorepo: `cmake/cores.cmake` lists only the `gpsp` row (instead of the ~50 original rows), the top-level `CMakeLists.txt` always builds `BUILD=gpsp` (no `All`/`Arch` combined mode, so no `arch/` folder), and `deps/`/`cores/` only vendor the submodules gpSP actually needs: [`gpsp`](https://github.com/libretro/gpsp), `libretro-common`, `simpleini`, `7-Zip`, `lz4`, `rcheevos`, `minizip-ng`, `zlib-ng` (plus `libvita2d`/`libvita2d_ext`, vendored as plain files upstream too).
 
-|                                                                                                           |          |
-|-----------------------------------------------------------------------------------------------------------|----------|
-| <img src="screenshots/playstation.svg" width="30"> + <img src="screenshots/button-circle.svg" width="30"> | 切换键盘 |
-| <img src="screenshots/playstation.svg" width="30"> + <img src="screenshots/analog-r-u.svg" width="30">    | 键盘上移 |
-| <img src="screenshots/playstation.svg" width="30"> + <img src="screenshots/analog-r-d.svg" width="30">    | 键盘下移 |
+The bubble feature lives in `frontend/source/bubble_maker.cpp/.h` (new file, not present in Emu4VitaPlus), wired into the UI in `frontend/source/ui/tabs/tab_browser.cpp` ("Create Vita bubble" menu entry) and into boot in `frontend/source/main.cpp` (`CheckBubbleRom()`) and `frontend/source/ui/ui.cpp` (the `gBubbleMode` flag, handled in `Ui::Show()`/`NotifyBootResult()`).
 
-### 即时存档
-<img src="screenshots/state.jpg" width="720"/>
+`gba_bios.bin` is **not** bundled in this repo (copyright — it's a real console BIOS dump) and must be copied to the device manually.
 
-### 金手指
-<img src="screenshots/cheat.jpg" width="720"/>
+## Building
 
+Requires [VitaSDK](https://vitasdk.org/). From the project root:
 
-### 使用触控屏在 FCEumm 中打鸭子
-<img src="screenshots/duck_hunter.jpg" width="720"/>
-
-* 控制 ==> 设备端口2，设置为 Zapper
-
-
-
-### [遮罩和着色器](GRAPHICS.md)
-
-
-## 支持的内核
-街机
-  - [FinalBurn Lite](https://gitee.com/yizhigai/libretro-fba-lite)
-  - [FinalBurn Alpha 2012](https://github.com/libretro/fbalpha2012)
-  - [FinalBurn Neo](https://github.com/libretro/FBNeo)
-  - [FinalBurn Neo Xtreme](https://github.com/KMFDManic/FBNeo-Xtreme-Amped)
-  - [mame2000](https://github.com/libretro/mame2000-libretro)
-  - [mame2003](https://github.com/libretro/mame2003-libretro)
-  - [mame2003_plus](https://github.com/libretro/mame2003-plus-libretro)
-  - [mame2003 Xtreme](https://github.com/KMFDManic/mame2003-xtreme)
-
-NES
-  - [FCEUmm](https://github.com/libretro/libretro-fceumm)
-  - [Nestopia](https://github.com/libretro/nestopia)
-
-SNES
-  - [Snes9x 2005](https://github.com/libretro/snes9x2005)
-  - [Snes9x](https://github.com/libretro/snes9x)
-  - [Supafaust](https://github.com/Rinnegatamante/supafaust)
-  - [ChimeraSNES](https://github.com/jamsilva/chimerasnes)
-
-MD
-  - [Genesis Plus GX](https://github.com/libretro/Genesis-Plus-GX)
-  - [Genesis Plus GX Wide](https://github.com/libretro/Genesis-Plus-GX-Wide)
-  - [PicoDrive](https://github.com/libretro/picodrive)
-  
-GBC
-  - [Gambatte](https://github.com/libretro/gambatte-libretro)
-  - [TGB Dual](https://github.com/libretro/tgbdual-libretro.git)
-
-GBA
-  - [gpSP](https://github.com/libretro/gpsp)
-  - [VBA Next](https://github.com/libretro/vba-next)
-  - [mGBA](https://github.com/libretro/mgba)
-
-PCE
-  - [Mednafen PCE Fast](https://github.com/libretro/beetle-pce-fast-libretro)
-  - [Mednafen SuperGrafx](https://github.com/libretro/beetle-supergrafx-libretro)
-
-PS1
-  - [PCSX ReARMed](https://github.com/libretro/pcsx_rearmed)
-
-NEOCD
-  - [NeoCD](https://github.com/libretro/neocd_libretro)
-
-WSC
-  - [Mednafen Wonderswan](https://github.com/libretro/beetle-wswan-libretro)
-
-NGP
-  - [Mednafen NeoPop](https://github.com/libretro/beetle-ngp-libretro)
-
-DOS
-  - [DOS Pure](https://github.com/libretro/dosbox-pure)
-
-Atari 2600
-  - [Stella 2014](https://github.com/libretro/stella2014-libretro)
-
-Atari 5200
-  - [Atari800](https://github.com/libretro/libretro-atari800)
-
-Atari 7800
-  - [ProSystem](https://github.com/libretro/prosystem-libretro)
-
-Vectrex
-  - [vecx](https://github.com/libretro/libretro-vecx)
-  
-Amiga
- - [uae4arm](https://github.com/libretro/uae4arm-libretro)
-
-ZX Spectrum
- - [fuse](https://github.com/libretro/fuse-libretro)
-
-PC98
- - [Neko Project II](https://github.com/libretro/libretro-meowPC98)
-  
-MSX
- - [Marat Fayzullin's fMSX](https://github.com/libretro/fmsx-libretro)
- - [blueMSX](https://github.com/libretro/blueMSX-libretro)
-
-Commodore 64
- - [VICE](https://github.com/libretro/vice-libretro)
-
-Sharp X68000
- - [PX68k](https://github.com/libretro/px68k-libretro)
-
-## 编译前准备
-### Windows
-* 安装 [msys2](https://www.msys2.org/) 或 [devkitPro](https://github.com/devkitPro/installer/releases)
-#### 进入 msys
-* 安装 [vitasdk](https://vitasdk.org/)
-* 安装 cmake, python, ccache
-  
-  ```bash
-  pacman -S cmake python python-pip ccache
-  ```
-
-* 安装 [openpyxl](https://pypi.org/project/openpyxl/), [pillow](https://pypi.org/project/pillow/), [lz4](https://pypi.org/project/lz4/), [toml](https://pypi.org/project/toml/)
-  
-
-  ```bash
-  pip3 install openpyxl pillow pz4 toml
-  ```
-
-  或者通过 pacman 安装适合的版本（推荐）
-  ```bash
-  pacman -S mingw-w64-???-???-python-openpyxl \
-            mingw-w64-???-???-python-pillow \
-            mingw-w64-???-???-python-lz4 \
-            mingw-w64-???-???-python-toml
-  ```
-
-### Linux
-
-参考 Windows 的步骤，都用 Linux 了，应该有能力自己捣鼓了。
-
-## 编译
-```bash
-mkdir build
-cd build
-cmake ../
-make
 ```
-编译带日志的版本:
-```bash
-mkdir build-debug
-cd build-debug
-cmake ../ -DWITH_LOG=ON
-make
-```
-编译独立内核的vpk:
-```bash
-mkdir build-gpsp
-cd build-gpsp
-cmake ../ -DBUILD=gpsp
-make
+git submodule update --init --recursive
+mkdir build && cd build
+cmake -DBUILD=gpsp ..
+make -j$(nproc)
 ```
 
-## 相关脚本
-### 翻译
+The vpk is produced at `build/out/gpSP_Emu4VitaPlus_<version>.vpk`.
 
-```mermaid
-graph TD
-A[./to_exce.py] --> B{{编辑 language.xlsx 和 translation.xlsx}}
-B --> C[./to_json.py]
-```
+## Roms
 
-### 生成 shaders
-```bash
-./compile_shaders.py  #请自行在网上寻找 psp2cgc.exe
-```
-
-## 相关路径
-### 预览图
-程序会在 rom 目录下的 `.previews` 目录中自动寻找同名的 `jpg` 或 `png` 图片，如果未找到，则会搜寻即时存档的截图
-
-### 金手指
-程序会依次在 rom 目录下，rom目录下的.cheats 目录，ux0:/data/EMU4VITAPLUS/[内核]/cheats 目录下的同名.cht文件，以先找到的为准。
-
-### 遮罩
-程序会读取 ux0:/data/EMU4VITAPLUS/[内核]/overlays 下的 overlays.ini
-
-### 存档
-ux0:/data/EMU4VITAPLUS/[内核]/savefiles/[rom]
-
-### BIOS
-ux0:/data/EMU4VITAPLUS/system
-
-请自行将对应的 BIOS 文件复制到此目录中【重要】
-
-### 兼容 [RetroArch romset](https://docs.libretro.com/guides/roms-playlists-thumbnails/)
-
-Emu4Vita++ 会尝试读取以下目录中的 .lpl 文件:
-* ux0:data/EMU4VITAPLUS/playlists
-* ux0:data/retroarch/retroarch.cfg 中的 playlist_directory 项
-* ux0:data/retroarch/playlists
-  
-利用 lpl 中的 label 和 path 信息，显示 rom 名称和缩略图。
-
-## 问题反馈
-
-[https://github.com/noword/Emu4VitaPlus/issues](https://github.com/noword/Emu4VitaPlus/issues)
-
-QQ群：550802386
-
-如果希望回报问题，请注明版本和使用的内核，问题出现前的操作；
-
-如果在游戏过程中出现问题，请上传rom；
-
-如果程序奔溃，请找到ux0:/data/下面的psp2dmp文件，并上传。
-
-
-## 特别感谢
-[一直改](https://gitee.com/yizhigai/Emu4Vita)
-
-[KyleBing](https://github.com/KyleBing/retro-game-console-icons)
-
-TearCrow
-
-[SnowPin](https://github.com/LiquifiedSnow) (RetroAchievements Admin)
-
-[Scott](https://github.com/ScottFromDerby) (RetroAchievements 测试)
-
-[yyoossk](https://github.com/yyoossk) (日语翻译)
-
-[theheroGAC](https://github.com/theheroGAC) (意大利语翻译)
-
-[chronoss09](https://github.com/chronoss09) (法语翻译)
-
-[limonetas](https://github.com/limonetas) (西班牙语翻译)
-
-[MayanKoyote](https://github.com/MayanKoyote) (俄罗斯语翻译)
-
-以及在本项目中用到的所有开源项目的开发者们
+- Roms can live anywhere reachable from the file browser (e.g. `ux0:data/roms/gba/`) — Emu4VitaPlus remembers the last folder you browsed to.
+- `gba_bios.bin` must be placed at `ux0:data/EMU4VITAPLUS/system/gba_bios.bin` or the app will warn about a missing BIOS.

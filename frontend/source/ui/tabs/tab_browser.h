@@ -11,6 +11,7 @@ enum
     CMD_CUT,
     CMD_DELETE,
     CMD_RENAME,
+    CMD_CREATE_BUBBLE,
     CMD_DOWNLOAD_THUMBNAILS
 };
 
@@ -47,8 +48,10 @@ private:
     void _OnKeySelect(Input *input);
     void _OnDownloadThumbnails(Input *input);
     void _OnCancelDownloadThumbnails(Input *input);
+    void _OnCreateBubble(Input *input);
 
     static int _DownloadThumbnailsThread(uint32_t args, void *argp);
+    static int _CreateBubbleThread(uint32_t args, void *argp);
 
     void _OnDialog(Input *input, int index);
     void _OnConfirmDialog(Input *input, int index);

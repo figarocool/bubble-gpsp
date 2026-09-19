@@ -75,6 +75,8 @@ target_link_libraries(
     rcheevos
     share
     frontend
+    ScePromoterUtil_stub
+    SceSysmodule_stub
     curl
     ssl
     crypto
@@ -120,7 +122,14 @@ target_link_libraries(
     SceMotion_stub
 )
 
-set(VITA_MAKE_FSELF_FLAGS "-a 0x2800000000000001")
+if(CORE STREQUAL "gpsp")
+    # elevated authid (SceShell) needed to call ScePromoterUtility from the
+    # "create vita bubble" feature - same authid pnes-bubble/psnes-bubble/
+    # bubble-mgba use
+    set(VITA_MAKE_FSELF_FLAGS "-a 0x2808000000000000")
+else()
+    set(VITA_MAKE_FSELF_FLAGS "-a 0x2800000000000001")
+endif()
 
 vita_create_self(${EBOOT_NAME} ${ELF_NAME} STRIPPED ${NOASLR})
 

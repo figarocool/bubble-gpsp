@@ -317,6 +317,14 @@ void Ui::Show()
 {
     LogFunctionNameLimited;
 
+    // a game bubble shows nothing of the frontend's own UI while the bundled
+    // rom is booting. gBubbleMode is cleared the instant loading succeeds
+    // (Ui::NotifyBootResult()), so once the game is actually running this
+    // falls through to normal rendering and the PS button still brings up
+    // the usual in-game menu (options, save states...).
+    if (gBubbleMode)
+        return;
+
     ImGui::SetNextWindowPos({MAIN_WINDOW_PADDING, MAIN_WINDOW_PADDING});
     ImGui::SetNextWindowSize({VITA_WIDTH - MAIN_WINDOW_PADDING * 2, VITA_HEIGHT - MAIN_WINDOW_PADDING * 2});
 
@@ -329,7 +337,12 @@ void Ui::Show()
                          ImGuiWindowFlags_NoBringToFrontOnFocus))
     {
         My_ImGui_ShowTimePower(gNetwork->Connected(), gRetroAchievements && gRetroAchievements->IsOnline(), gRetroAchievements->GetHardcoreEnabled());
-        (gStatus.Get() == APP_STATUS_BOOT) ? _boot_ui->Show() : _ShowNormal();
+        // a game bubble skips the boot log window entirely and shows nothing
+        // until the game itself starts rendering
+        if (gStatus.Get() == APP_STATUS_BOOT && !gBubbleMode)
+            _boot_ui->Show();
+        else if (gStatus.Get() != APP_STATUS_BOOT)
+            _ShowNormal();
     }
 
     ImGui::End();
@@ -339,12 +352,16 @@ void Ui::Show()
 
 void Ui::AppendLog(const char *log)
 {
+    if (gBubbleMode)
+        return;
     _boot_ui->AppendLog(log);
 }
 
 void Ui::ClearLogs()
 {
     LogFunctionName;
+    if (gBubbleMode)
+        return;
     _boot_ui->ClearLogs();
 }
 
@@ -353,7 +370,15 @@ void Ui::NotifyBootResult(bool result)
     LogFunctionName;
     if (result)
     {
-        _tab_index = TAB_INDEX_STATE;
+        _tab_index = TAB_INDEX_SYSTEM;
+
+        // the bubble's one job (skip the frontend's own UI) is done the
+        // moment the bundled rom has actually loaded - clear it here,
+        // synchronously, right as loading finishes, instead of re-deriving
+        // "are we still booting?" from gStatus every frame in Ui::Show(),
+        // which left a 1-frame gap around the status transition where the
+        // full title-bar/battery overlay would flash briefly.
+        gBubbleMode = false;
     }
     else
     {

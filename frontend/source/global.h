@@ -33,6 +33,9 @@ struct BootRomInfo
 
 extern bool gBootFromArch;
 extern BootRomInfo gBootRomInfo;
+// a game bubble launches straight into its one bundled rom - skip the boot
+// log window and go straight into the game.
+extern bool gBubbleMode;
 
 extern AppStatus gStatus;
 extern Emu4VitaPlus::VideoThread *gVideo;

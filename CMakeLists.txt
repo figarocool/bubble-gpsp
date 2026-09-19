@@ -25,18 +25,16 @@ endif()
 
 GET_CORES()
 
-set(BUILD_LIST "All" "Arch" ${CORES})
-string(REPLACE "|" " " BUILD_LIST_STR ${BUILD_LIST})
-set(BUILD "Arch" CACHE STRING ${BUILD_LIST_STR})
+# bubble-gpsp only ever builds the gpsp core (no "All"/"Arch" combined
+# build, since the arch/ subproject and the other ~49 cores aren't
+# vendored in this fork).
+set(BUILD_LIST ${CORES})
+set(BUILD "gpsp" CACHE STRING "core to build")
 set_property(CACHE BUILD PROPERTY STRINGS ${BUILD_LIST})
 string(STRIP ${BUILD} BUILD)
 
 if(NOT ${BUILD} IN_LIST BUILD_LIST)
     message(FATAL_ERROR "valid BUILD value: ${BUILD_LIST}")
-endif()
-
-if(BUILD STREQUAL "Arch")
-    set(BUILD_SELF ON)
 endif()
 
 project("Emu4Vita++")
@@ -101,12 +99,8 @@ foreach(index RANGE ${length})
     list(GET CORE_SHORTS ${index} CORE_SHORT)
     list(GET TITLE_IDS ${index} SFO_TITLE_ID)
 
-    if(BUILD STREQUAL "All" OR BUILD STREQUAL "Arch" OR BUILD STREQUAL ${CORE})
+    if(BUILD STREQUAL ${CORE})
         add_subdirectory(cores cores/${CORE})
         add_subdirectory(apps apps/${CORE})
     endif()
 endforeach()
-
-if(BUILD STREQUAL "All" OR BUILD STREQUAL "Arch")
-    add_subdirectory(arch)
-endif()

@@ -1,1 +1,12 @@
 build
+build-*
+
+# generated at configure/build time by share/CMakeLists.txt (LANG_SHARE)
+# and frontend/CMakeLists.txt (LANG_FRONTEND) from script/*.json - not
+# tracked upstream either, regenerated fresh on every build
+/frontend/source/language_frontend.h
+/share/source/language_define.cpp
+/share/source/language_define.h
+/share/pkg/assets/language.zbin
+/share/pkg/assets/translation.zbin
+

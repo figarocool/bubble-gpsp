@@ -13,6 +13,7 @@
 #include "utils.h"
 #include "ra_lpl.h"
 #include "global.h"
+#include "bubble_maker.h"
 #include "network.h"
 
 #define HISTROY_SIZE 10
@@ -386,6 +387,7 @@ void TabBrowser::_OnKeySelect(Input *input)
         options.push_back(LANG_CUT);
         options.push_back(LANG_DELETE);
         options.push_back(LANG_RENAME);
+        options.push_back(LanguageString("Create Vita bubble"));
     }
 
     if (gConfig->auto_download_thumbnail)
@@ -511,6 +513,55 @@ void TabBrowser::_OnCancelDownloadThumbnails(Input *input)
     _updating_thumbnails = false;
 }
 
+void TabBrowser::_OnCreateBubble(Input *input)
+{
+    LogFunctionName;
+
+    if (_index >= _directory->GetSize())
+        return;
+
+    DirItem &item = _directory->GetItem(_index);
+    if (item.is_dir)
+        return;
+
+    if (item.crc32 == 0)
+        item.UpdateDetails();
+
+    gHint->SetHint("Creating bubble...", 10 * 60, true);
+
+    uint32_t p = (uint32_t)this;
+    StartThread(_CreateBubbleThread, 4, &p);
+}
+
+int TabBrowser::_CreateBubbleThread(uint32_t args, void *argp)
+{
+    LogFunctionName;
+    CLASS_POINTER(TabBrowser, tab, argp);
+
+    DirItem &item = tab->_directory->GetItem(tab->_index);
+    std::string rom_path = item.GetFullPath();
+    uint32_t crc32 = item.crc32;
+
+    std::string err = CreateBubble(rom_path, crc32);
+
+    if (err.empty())
+    {
+        gHint->SetHint("Bubble created! Check your LiveArea.", 3 * 60, true);
+
+        // pin the roms folder as "last visited" right here, tied to this
+        // specific action - navigating around afterwards (e.g. backing out
+        // toward the root before closing the app) must not overwrite it.
+        gConfig->last_rom = rom_path;
+        gConfig->Save();
+    }
+    else
+    {
+        gHint->SetHint(std::string("Bubble failed: ") + err, 5 * 60, true);
+    }
+
+    return 0;
+}
+
 void TabBrowser::_OnDialog(Input *input, int index)
 {
     LogFunctionName;
@@ -521,7 +572,9 @@ void TabBrowser::_OnDialog(Input *input, int index)
 
     if (_directory->GetItem(_index).is_dir)
     {
-        index += 4;
+        // skip over the file-only options (COPY/CUT/DELETE/RENAME/CREATE_BUBBLE)
+        // that are never present in a directory's option list
+        index += 5;
     }
 
     _cmd = index;
@@ -567,6 +620,11 @@ void TabBrowser::_OnDialog(Input *input, int index)
     case CMD_DOWNLOAD_THUMBNAILS:
         LogDebug("Download thumbnails");
         _OnDownloadThumbnails(input);
+        break;
+
+    case CMD_CREATE_BUBBLE:
+        LogDebug("Create bubble");
+        _OnCreateBubble(input);
         break;
 
     default:

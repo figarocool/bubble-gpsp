@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <psp2/io/dirent.h>
 #include "file.h"
 #include "app.h"
 #include "log.h"
@@ -70,9 +71,40 @@ static void LogDefines()
     LOG_DEFINE(CONTROL_SPEED_BY_VIDEO);
 }
 
+// a game bubble launches straight into its one bundled rom - skip the
+// launcher UI entirely and jump straight to APP_STATUS_BOOT, exactly as if
+// it had been passed on the command line (see App::Run()).
+static void CheckBubbleRom()
+{
+    if (!gBootRomInfo.path.empty())
+        return;
+
+    SceUID dfd = sceIoDopen("app0:bubble");
+    if (dfd < 0)
+        return;
+
+    SceIoDirent entry;
+    while (sceIoDread(dfd, &entry) > 0)
+    {
+        if (SCE_S_ISDIR(entry.d_stat.st_mode))
+            continue;
+
+        // entry_name/crc32 are only meaningful for a rom packed inside an
+        // archive (Emulator::LoadRom() uses them to look up a cached,
+        // already-extracted copy via ArchiveManager::GetCachedPath()) - the
+        // bundled rom here is always a plain, uncompressed file, so leave
+        // both unset, exactly like a plain file selected from the browser.
+        gBootRomInfo.path = std::string("app0:bubble/") + entry.d_name;
+        gBubbleMode = true;
+        break;
+    }
+    sceIoDclose(dfd);
+}
+
 int main(int argc, char *const argv[])
 {
     ParseParams(argc, argv);
+    CheckBubbleRom();
 
     File::MakeDirs(CORE_DATA_DIR);
     File::MakeDirs(CORE_SYSTEM_DIR);

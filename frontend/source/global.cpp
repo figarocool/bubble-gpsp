@@ -3,6 +3,7 @@
 AppStatus gStatus;
 bool gBootFromArch = false;
 BootRomInfo gBootRomInfo;
+bool gBubbleMode = false;
 
 Emu4VitaPlus::VideoThread *gVideo = nullptr;
 Overlays *gOverlays;
