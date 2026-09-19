@@ -71,16 +71,16 @@ static bool PatchSfo(std::vector<char> &sfo, const std::string &title_id, const 
     if (sfo.size() < 20)
         return false;
 
-    // the base app's param.sfo ships an empty CONTENT_ID - left untouched,
-    // every cloned bubble would share that same (empty) content id, and the
-    // Vita shell caches LiveArea grid icons keyed by content id rather than
-    // title id: the 2nd+ bubble created would then silently reuse whatever
-    // icon got cached for the 1st one's (identical, empty) content id,
-    // showing no grid icon of its own even though everything else (the
-    // title, the LiveArea background) is correctly per-bubble.
-    char content_id[48];
-    snprintf(content_id, sizeof(content_id), "EP9000-%s_00-0000000000000000", title_id.c_str());
-    const std::string content_id_str(content_id);
+    // CONTENT_ID is deliberately left untouched (same as pnes-bubble /
+    // psnes-bubble / bubble-mgba): every cloned bubble shares the base
+    // app's own CONTENT_ID. A previous attempt to patch a unique fake
+    // CONTENT_ID per bubble here (to fix a missing 2nd-bubble LiveArea
+    // icon) turned out to be the wrong theory - pnes-bubble never touches
+    // CONTENT_ID and has no such issue even with 100+ bubbles, so writing
+    // a fake per-bubble CONTENT_ID into param.sfo is more likely what
+    // triggers the Vita shell to drop the icon than what fixes it.
+    // WriteHeadBin() below still derives a per-titleid fallback content id
+    // for head.bin specifically when the base app's is empty.
 
     auto readU32 = [&](size_t off)
     {
@@ -118,8 +118,6 @@ static bool PatchSfo(std::vector<char> &sfo, const std::string &title_id, const 
             new_value = &title;
         else if (key == "STITLE")
             new_value = &title;
-        else if (key == "CONTENT_ID")
-            new_value = &content_id_str;
 
         if (!new_value)
             continue;

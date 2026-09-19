@@ -1,5 +1,6 @@
 build
 build-*
+script/__pycache__
 
 # generated at configure/build time by share/CMakeLists.txt (LANG_SHARE)
 # and frontend/CMakeLists.txt (LANG_FRONTEND) from script/*.json - not
