@@ -262,7 +262,17 @@ namespace Emu4VitaPlus
                     {
                         // LogDebug("  call up: %08x %08x", iter.first, iter.second);
                         iter.func(this);
-                        if (key)
+                        // only re-arm once the buttons belonging to THIS combo
+                        // are all released, not "every button on the pad" -
+                        // checking bare `key` here meant that as long as the
+                        // player was holding any unrelated button at all
+                        // (e.g. a d-pad direction during gameplay), every
+                        // key-up hotkey - including the PS button's own menu
+                        // toggle - stayed disabled until the pad went
+                        // completely idle for one frame, which on a running
+                        // game could take a very long time (or need a
+                        // suspend/resume, which forces one all-released read)
+                        if (key & iter.key)
                         {
                             _enable_key_up = false;
                         }

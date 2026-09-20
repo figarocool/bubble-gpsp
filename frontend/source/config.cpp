@@ -205,7 +205,10 @@ namespace Emu4VitaPlus
         hotkeys[SWITCH_KEYBOARD] = ENABLE_KEYBOARD ? SCE_CTRL_PSBUTTON | SCE_CTRL_CIRCLE : 0;
         hotkeys[KEYBOARD_UP] = ENABLE_KEYBOARD ? SCE_CTRL_PSBUTTON | SCE_CTRL_RSTICK_UP : 0;
         hotkeys[KEYBOARD_DOWN] = ENABLE_KEYBOARD ? SCE_CTRL_PSBUTTON | SCE_CTRL_RSTICK_DOWN : 0;
-        hotkeys[MENU_TOGGLE] = SCE_CTRL_PSBUTTON;
+        // PS alone is a "system" button (sceShellUtilLock arbitrates it with
+        // the shell) and was unreliable as the in-game menu toggle; L1+R1 is
+        // a plain application-level combo with no such contention.
+        hotkeys[MENU_TOGGLE] = SCE_CTRL_L1 | SCE_CTRL_R1;
     }
 
     void Config::DefaultGraphics()
